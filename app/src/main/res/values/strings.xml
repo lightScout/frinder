@@ -2,4 +2,7 @@
     <string name="app_name">Frinder</string>
     <string name="warning_message">This application requires location permissions to be used. Please enable location permission to use this app</string>
     <string name="location_text">Latitude: %,.3f, Longitude: %,.3f</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="marker_name_text">%s</string>
+    <string name="marker_address_text">%s</string>
 </resources>

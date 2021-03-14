@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="Food"
+        android:icon="@drawable/ic_food"
+        android:id="@+id/food_item"
+        />
+
+    <item android:title="Self"
+        android:icon="@drawable/ic_self"
+        android:id="@+id/self_item"
+        />
+    <item android:title="Health"
+        android:icon="@drawable/ic_health"
+        android:id="@+id/health_item"
+        />
+</menu>
