@@ -25,17 +25,20 @@ import com.britshbroadcast.frinder.R
 import com.britshbroadcast.frinder.databinding.ActivityMainBinding
 import com.britshbroadcast.frinder.model.data.Result
 import com.britshbroadcast.frinder.util.Type
+import com.britshbroadcast.frinder.view.adapter.MarkerAdapter
 import com.britshbroadcast.frinder.view.fragment.MarkerFragment
 import com.britshbroadcast.frinder.viewmodel.FrinderViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 
-class MainActivity : AppCompatActivity(), LocationListener, OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
+class MainActivity : AppCompatActivity(), LocationListener, OnMapReadyCallback,
+    MarkerAdapter.MarkerDelegate {
     private val REQUEST_CODE = 222
 
     private lateinit var binding: ActivityMainBinding
@@ -44,9 +47,7 @@ class MainActivity : AppCompatActivity(), LocationListener, OnMapReadyCallback, 
     private lateinit var slideOutAnimation: Animation
 
     private lateinit var locationManager: LocationManager
-
-//    private lateinit var dataBase: DataBase
-
+    private  var markerAdapter: MarkerAdapter = MarkerAdapter(mutableListOf(), this)
 
     private val frinderViewModel by viewModels<FrinderViewModel>()
     private var SEARCH_TYPE = Type.bar.toString()
@@ -63,7 +64,6 @@ class MainActivity : AppCompatActivity(), LocationListener, OnMapReadyCallback, 
         setContentView(binding.root)
         slideInAnimation = AnimationUtils.loadAnimation(this, android.R.anim.slide_in_left)
         slideOutAnimation = AnimationUtils.loadAnimation(this, android.R.anim.slide_out_right)
-//        dataBase = Room.inMemoryDatabaseBuilder(this, DataBase::class.java).allowMainThreadQueries().build()
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
@@ -71,13 +71,14 @@ class MainActivity : AppCompatActivity(), LocationListener, OnMapReadyCallback, 
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        binding.mainRecyclerView.adapter = markerAdapter
+
 
         frinderViewModel.searchResultLiveData.observe(this, Observer{
             Log.d("TAG_J", "Results retrieved -> ${it.size}")
-
+            markerAdapter.updateData(it)
             updateMap(it)
         })
-
 
         binding.settingsButton.setOnClickListener {
             startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).also {
@@ -175,6 +176,7 @@ class MainActivity : AppCompatActivity(), LocationListener, OnMapReadyCallback, 
             map.addMarker(
                     MarkerOptions()
                             .position(location).title("This is me!")
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.personicon))
             )
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f))
             LOCATION = "${location.latitude},${location.longitude}"
@@ -184,14 +186,10 @@ class MainActivity : AppCompatActivity(), LocationListener, OnMapReadyCallback, 
 
 
 
-
     }
 
     override fun onMapReady(gMap: GoogleMap) {
         this.map = gMap
-        map.setOnMarkerClickListener(this)
-
-
     }
 
     @SuppressLint("RestrictedApi")
@@ -202,12 +200,6 @@ class MainActivity : AppCompatActivity(), LocationListener, OnMapReadyCallback, 
         val popupMenu = PopupMenu(this,view)
         popupMenu.inflate(R.menu.main_menu)
 
-        // Another solution restricted to Android Q and above
-//        val mInflater = popupMenu.menuInflater
-//        mInflater.inflate(R.menu.main_menu, menu.menu)
-//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-//            menu.setForceShowIcon(true)
-//        }
 
         popupMenu.setOnMenuItemClickListener {
             when (it.itemId) {
@@ -236,23 +228,8 @@ class MainActivity : AppCompatActivity(), LocationListener, OnMapReadyCallback, 
 
     }
 
-    override fun onMarkerClick(marker: Marker): Boolean {
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(marker.position, 15f))
-        supportFragmentManager.popBackStack()
-        val markerFragment: MarkerFragment = MarkerFragment()
-
-        val bundle: Bundle = Bundle()
-        bundle.putString("KEY", marker.title)
-        markerFragment.arguments = bundle
-        supportFragmentManager.beginTransaction()
-            .setCustomAnimations(
-                android.R.anim.fade_in,
-                android.R.anim.fade_out,
-                android.R.anim.fade_in,
-                android.R.anim.fade_out
-            ).replace(R.id.main_frame, markerFragment)
-            .addToBackStack(null)
-            .commit()
-        return true
+    override fun selectMarker(result: Result) {
+        val latLng = LatLng(result.geometry.location.lat,result.geometry.location.lng)
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
     }
 }

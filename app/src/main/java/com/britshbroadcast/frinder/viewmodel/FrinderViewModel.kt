@@ -1,22 +1,34 @@
 package com.britshbroadcast.frinder.viewmodel
 
+import android.app.Activity
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.room.Ignore
+import androidx.room.Room
+import com.britshbroadcast.frinder.model.data.Response
 import com.britshbroadcast.frinder.model.data.Result
+import com.britshbroadcast.frinder.model.db.AppDataBase
 import com.britshbroadcast.frinder.model.network.FrinderRetrofit
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 
-class FrinderViewModel: ViewModel() {
+class FrinderViewModel(applpication: Application): AndroidViewModel(applpication) {
 
 
     private val retrofit = FrinderRetrofit()
 
     val searchResultLiveData: MutableLiveData<List<Result>> = MutableLiveData()
 
-    var fragmentLiveData: MutableLiveData<Result> = MutableLiveData()
+    private val db = Room.databaseBuilder(
+        applpication.applicationContext,
+        AppDataBase::class.java,
+        "response.db"
+    ).build()
+    private var dbIndex: Int = 0
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -31,6 +43,14 @@ class FrinderViewModel: ViewModel() {
                     it.results
                 }
                 .subscribe({
+//                    dbIndex++
+                    Thread{
+                        db.responseDao().insertResponseItem(
+                            Response(it.toString())
+                        )
+
+                    }.start()
+
                     searchResultLiveData.postValue(it)
                     compositeDisposable.clear()
                 }, {
@@ -55,5 +75,9 @@ class FrinderViewModel: ViewModel() {
 //        })
     }
 
+
+    fun getAllResponseFromDB(){
+        Log.d("TAGJ", db.responseDao().getAllResponses().toString())
+    }
 
 }

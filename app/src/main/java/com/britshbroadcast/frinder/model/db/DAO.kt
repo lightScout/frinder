@@ -1,19 +1,18 @@
 package com.britshbroadcast.frinder.model.db
 
-import androidx.lifecycle.MutableLiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import com.britshbroadcast.frinder.model.data.Result
+import com.britshbroadcast.frinder.model.data.Response
 
 @Dao
 interface DAO {
     @Insert
-    fun insertResultItem(vararg result: Result)
+    fun insertResponseItem(vararg response: Response)
 
-    @Query("SELECT * from result_table WHERE place_id = :placeID")
-    fun getResultItemByID(placeID: String): Result?
+    @Query("SELECT * from response WHERE responseId LIKE :responseId")
+    fun getResponseByID(responseId: Int): Response?
 
-    @Query("SELECT * FROM result_table")
-    fun getAllResults(): MutableLiveData<List<Result>>
+    @Query("SELECT * FROM response")
+    fun getAllResponses(): List<Response>
 }
